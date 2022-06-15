@@ -30,7 +30,6 @@ sudo apt install libopenmpi-dev
 git clone https://github.com/vsnever/mpi-cuda-sartsolver
 git clone https://github.com/p-ranav/argparse
 cd mpi-cuda-sartsolver
-mkdir source/include 
 ln -s ../argparse/include/argparse source/include/argparse
 make
 ```

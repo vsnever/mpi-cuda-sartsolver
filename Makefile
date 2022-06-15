@@ -2,7 +2,12 @@ CXX = g++
 MPICXX = mpic++
 NVCC = nvcc
 
-CXXFLAGS = -Wall -O3 -std=c++17 $(DEFINES)
+SOURCE_DIR = source
+INCLUDE_DIR = $(SOURCE_DIR)/include
+KERNEL_DIR = source/cuda
+BUILD_DIR = build
+
+CXXFLAGS = -Wall -O3 -std=c++17 $(DEFINES) -I $(INCLUDE_DIR)
 
 GENCODE_SM35    := -gencode arch=compute_35,code=sm_35
 GENCODE_SM37    := -gencode arch=compute_37,code=sm_37
@@ -18,10 +23,6 @@ GENCODE_FLAGS   := $(GENCODE_SM35) $(GENCODE_SM37) $(GENCODE_SM50) $(GENCODE_SM5
 
 NVCCFLAGS = -O3 -Wno-deprecated-gpu-targets $(DEFINES) $(GENCODE_FLAGS)
 
-SOURCE_DIR = source
-KERNEL_DIR = source/cuda
-BUILD_DIR = build
-
 ifeq ($(CUDA_HOME),)
 CUDA_HOME := /usr/local/cuda
 endif
@@ -34,7 +35,7 @@ HDF5FLAGS = -I$(HDF5_HOME)/include
 
 LDFLAGS = -L$(CUDA_HOME)/lib64 -lhdf5 -lhdf5_cpp -lcublas -lcudart
 
-HEADERS = $(SOURCE_DIR)/arguments.hpp $(SOURCE_DIR)/hdf5files.hpp $(SOURCE_DIR)/raytransfer.hpp $(SOURCE_DIR)/laplacian.hpp $(SOURCE_DIR)/sartsolver.hpp $(SOURCE_DIR)/sartsolver_cuda.hpp $(SOURCE_DIR)/image.hpp
+HEADERS = $(INCLUDE_DIR)/arguments.hpp $(INCLUDE_DIR)/hdf5files.hpp $(INCLUDE_DIR)/raytransfer.hpp $(INCLUDE_DIR)/laplacian.hpp $(INCLUDE_DIR)/sartsolver.hpp $(INCLUDE_DIR)/sartsolver_cuda.hpp $(INCLUDE_DIR)/image.hpp
 
 TARGETS = sartsolver
 
@@ -45,32 +46,32 @@ all: $(TARGETS)
 $(TARGETS): $(OBJS)
 	$(MPICXX) -o $@ $^ $(LDFLAGS)
 
-$(BUILD_DIR)/raytransfer.o: $(SOURCE_DIR)/raytransfer.cpp $(SOURCE_DIR)/raytransfer.hpp | $(BUILD_DIR)
+$(BUILD_DIR)/raytransfer.o: $(SOURCE_DIR)/raytransfer.cpp $(INCLUDE_DIR)/raytransfer.hpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(HDF5FLAGS) -c $(SOURCE_DIR)/raytransfer.cpp -o $@
 
-$(BUILD_DIR)/laplacian.o: $(SOURCE_DIR)/laplacian.cpp $(SOURCE_DIR)/laplacian.hpp | $(BUILD_DIR)
+$(BUILD_DIR)/laplacian.o: $(SOURCE_DIR)/laplacian.cpp $(INCLUDE_DIR)/laplacian.hpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(HDF5FLAGS) -c $(SOURCE_DIR)/laplacian.cpp -o $@
 
-$(BUILD_DIR)/image.o: $(SOURCE_DIR)/image.cpp $(SOURCE_DIR)/image.hpp | $(BUILD_DIR)
+$(BUILD_DIR)/image.o: $(SOURCE_DIR)/image.cpp $(INCLUDE_DIR)/image.hpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(HDF5FLAGS) -c $(SOURCE_DIR)/image.cpp -o $@
 
-$(BUILD_DIR)/sartsolver.o: $(SOURCE_DIR)/sartsolver.cpp $(SOURCE_DIR)/sartsolver.hpp $(SOURCE_DIR)/raytransfer.hpp $(SOURCE_DIR)/laplacian.hpp | $(BUILD_DIR)
+$(BUILD_DIR)/sartsolver.o: $(SOURCE_DIR)/sartsolver.cpp $(INCLUDE_DIR)/sartsolver.hpp $(INCLUDE_DIR)/raytransfer.hpp $(INCLUDE_DIR)/laplacian.hpp | $(BUILD_DIR)
 	$(MPICXX) $(CXXFLAGS) -c $(SOURCE_DIR)/sartsolver.cpp -o $@
 
-$(BUILD_DIR)/sartsolver_cuda.o: $(SOURCE_DIR)/sartsolver_cuda.cpp $(SOURCE_DIR)/sartsolver_cuda.hpp $(SOURCE_DIR)/raytransfer.hpp $(SOURCE_DIR)/laplacian.hpp | $(BUILD_DIR)
+$(BUILD_DIR)/sartsolver_cuda.o: $(SOURCE_DIR)/sartsolver_cuda.cpp $(INCLUDE_DIR)/sartsolver_cuda.hpp $(INCLUDE_DIR)/raytransfer.hpp $(INCLUDE_DIR)/laplacian.hpp | $(BUILD_DIR)
 	$(MPICXX) $(CXXFLAGS) $(CUDAFLAGS) -c $(SOURCE_DIR)/sartsolver_cuda.cpp -o $@
 
 $(BUILD_DIR)/sart_kernels.o: $(KERNEL_DIR)/sart_kernels.cu | $(BUILD_DIR)
 	$(NVCC) $(NVCCFLAGS) -c $(KERNEL_DIR)/sart_kernels.cu -o $@
 
-$(BUILD_DIR)/arguments.o: $(SOURCE_DIR)/arguments.cpp $(SOURCE_DIR)/arguments.hpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) -I $(SOURCE_DIR)/include -c $(SOURCE_DIR)/arguments.cpp -o $@
+$(BUILD_DIR)/arguments.o: $(SOURCE_DIR)/arguments.cpp $(INCLUDE_DIR)/arguments.hpp | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) -c $(SOURCE_DIR)/arguments.cpp -o $@
 
-$(BUILD_DIR)/hdf5files.o: $(SOURCE_DIR)/hdf5files.cpp $(SOURCE_DIR)/hdf5files.hpp | $(BUILD_DIR)
+$(BUILD_DIR)/hdf5files.o: $(SOURCE_DIR)/hdf5files.cpp $(INCLUDE_DIR)/hdf5files.hpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(HDF5FLAGS) -c $(SOURCE_DIR)/hdf5files.cpp -o $@
 
 $(BUILD_DIR)/main.o: $(SOURCE_DIR)/main.cpp $(HEADERS) | $(BUILD_DIR)
-	$(MPICXX) $(CXXFLAGS) $(HDF5FLAGS) $(CUDAFLAGS) -I $(SOURCE_DIR)/include -c $(SOURCE_DIR)/main.cpp -o $@
+	$(MPICXX) $(CXXFLAGS) $(HDF5FLAGS) $(CUDAFLAGS) -c $(SOURCE_DIR)/main.cpp -o $@
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
