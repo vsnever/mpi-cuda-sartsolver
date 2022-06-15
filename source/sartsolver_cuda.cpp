@@ -46,6 +46,7 @@ extern "C"
 } while(0)
 
 
+#if (CUBLAS_VERSION >= 11402)
 #define SafeCublasCall(call) do \
 { \
     cublasStatus_t status = call; \
@@ -55,6 +56,16 @@ extern "C"
         std::exit(1); \
     } \
 } while(0)
+#else
+#define SafeCublasCall(call) do \
+{ \
+    cublasStatus_t status = call; \
+    if (status != CUBLAS_STATUS_SUCCESS) { \
+        std::cerr << "CuBLAS error in file " <<  __FILE__ << " in line " << __LINE__ << std::endl; \
+        std::exit(1); \
+    } \
+} while(0)
+#endif
 
 
 BaseSARTSolverMPICuda::BaseSARTSolverMPICuda(RayTransferMatrix& rtm, LaplacianMatrix &lm, int rank,
