@@ -25,13 +25,17 @@ NVCCFLAGS = -O3 -Wno-deprecated-gpu-targets $(DEFINES) $(GENCODE_FLAGS)
 
 CUDA_HOME ?= $(CUDA_DIR)
 CUDA_HOME ?= $(CUDA_ROOT)
-CUDA_HOME ?= /usr/local/cuda
+ifeq ($(CUDA_HOME),)
+CUDA_HOME := /usr/local/cuda
+endif
 
-CUDAFLAGS = -I${CUDA_HOME}/include
+CUDAFLAGS = -I$(CUDA_HOME)/include
 
 HDF5_HOME ?= $(HDF5_DIR)
 HDF5_HOME ?= $(HDF5_ROOT)
-HDF5_HOME ?= /usr/lib/x86_64-linux-gnu/hdf5/serial
+ifeq ($(HDF5_HOME),)
+HDF5_HOME := /usr/lib/x86_64-linux-gnu/hdf5/serial
+endif
 
 HDF5FLAGS = -I$(HDF5_HOME)/include
 
