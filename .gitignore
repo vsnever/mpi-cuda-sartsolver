@@ -1,0 +1,6 @@
+*.o
+*.h5
+source/include
+build
+sartsolver
+*.DS_Store
