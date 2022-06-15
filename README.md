@@ -22,6 +22,9 @@ Dependencies
 Installation
 ------------
 
+Note:
+Remove unsupported CUDA architectures from GENCODE_FLAGS for older/newer CUDA toolkit versions.
+
 On Ubuntu:
 ```bash
 sudo apt install libhdf5-dev
@@ -30,7 +33,18 @@ sudo apt install libopenmpi-dev
 git clone https://github.com/vsnever/mpi-cuda-sartsolver
 git clone https://github.com/p-ranav/argparse
 cd mpi-cuda-sartsolver
-ln -s ../argparse/include/argparse source/include/argparse
+ln -s -- "$PWD/../argparse/include/argparse" source/include/argparse
 make
 ```
 
+On ITER SDCC:
+```bash
+module load HDF5/1.10.7-GCCcore-10.2.0-serial
+module load CUDA/11.1.1-GCC-10.2.0
+module load OpenMPI/4.1.0-GCC-10.2.0
+git clone https://github.com/vsnever/mpi-cuda-sartsolver
+git clone https://github.com/p-ranav/argparse
+cd mpi-cuda-sartsolver
+ln -s -- "$PWD/../argparse/include/argparse" source/include/argparse
+make
+```
