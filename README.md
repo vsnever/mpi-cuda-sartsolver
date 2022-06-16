@@ -7,9 +7,10 @@ radiation data). The solver is parallelized with MPI and accelerated with Nvidia
 The matrix is distributed between MPI processes and GPUs, which allows the solver to work
 with matrices that exceed the amount of RAM of individual GPUs and compute nodes.
 
-The solver uses the HDF5 format for input and output data.
+The solver uses the HDF5 format for input and output data. Currently, the solver uses CUDA-unaware MPI.
 
-Currently, the solver uses CUDA-unaware MPI.
+The solver was created in NRC "Kurchatov Institute" for ITER diagnostics as part of the
+Impurity Flux Reconstruction framework and financed by Rosatom Private Institution "Project center ITER".
 
 Dependencies
 ------------
@@ -22,8 +23,7 @@ Dependencies
 Installation
 ------------
 
-Note:
-Remove unsupported CUDA architectures from GENCODE_FLAGS for older/newer CUDA toolkit versions.
+Note: Remove unsupported CUDA architectures from GENCODE_FLAGS for older/newer CUDA toolkit versions.
 
 On Ubuntu:
 ```bash
