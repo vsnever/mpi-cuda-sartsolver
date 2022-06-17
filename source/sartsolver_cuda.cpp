@@ -145,7 +145,7 @@ int BaseSARTSolverMPICuda::pre_iteration_setup(std::vector<double>& solution, co
     // calculating measurement squared and normalizing
     measurement_squared = 0;
     double measurement_squared_loc = 0;
-    for (auto m : measurement) {measurement_squared_loc += m * m;}
+    for (auto m : measurement) {measurement_squared_loc += (m > 0) ? m * m : 0;}  // exclude negative values (saturated pixels)
     MPI_Allreduce(&measurement_squared_loc, &measurement_squared, 1, MPI_DOUBLE, MPI_SUM, mpi_comm);
     measurement_squared /= norm * norm;
 

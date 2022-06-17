@@ -22,7 +22,10 @@ __global__ void InitialGuessKernel(float* const __restrict__ solution, const flo
     __shared__ float measured_cache[BLOCK_SIZE];
 
     const size_t cache_size = min(npixel - ipix_offset, (size_t)BLOCK_SIZE);
-    if (threadIdx.x < cache_size) measured_cache[threadIdx.x] = measured[ipix_offset + threadIdx.x];
+    if (threadIdx.x < cache_size) {
+        const float meas = measured[ipix_offset + threadIdx.x];
+        measured_cache[threadIdx.x] = (meas > 0) ? meas : 0;  // exclude negative values (saturated pixels)
+    }
 
     __syncthreads();
 
@@ -65,7 +68,8 @@ __global__ void PropagateKernel(float* const __restrict__ diff, const float* con
     const size_t cache_size = min(npixel - ipix_offset, (size_t)BLOCK_SIZE);
     if (threadIdx.x < cache_size) {
         const size_t ipix = ipix_offset + threadIdx.x;
-        fit_diff_cache[threadIdx.x] = measured[ipix] - fitted[ipix];        
+        const float meas = measured[ipix];
+        fit_diff_cache[threadIdx.x] = (meas >= 0) ? meas - fitted[ipix] : 0;  // exclude negative values (saturated pixels)
         const float length = ray_length[ipix];
         inv_length_cache[threadIdx.x] = (length > ray_length_thres) ? 1.f / length : 0;
     }
@@ -114,8 +118,15 @@ __global__ void LogPropagateKernel(float* const __restrict__ obs_fit, const floa
     const size_t cache_size = min(npixel - ipix_offset, (size_t)BLOCK_SIZE);
     if (threadIdx.x < cache_size) {
         const size_t ipix = ipix_offset + threadIdx.x;
-        measured_cache[threadIdx.x] = measured[ipix];
-        fitted_cache[threadIdx.x] = fitted[ipix];
+        const float meas = measured[ipix];
+        if (meas >= 0) {
+            measured_cache[threadIdx.x] = meas;
+            fitted_cache[threadIdx.x] = fitted[ipix];
+        }
+        else {  // exclude negative values (saturated pixels)
+            measured_cache[threadIdx.x] = 0;
+            fitted_cache[threadIdx.x] = 0;
+        }
         const float length = ray_length[ipix];
         inv_length_cache[threadIdx.x] = (length > ray_length_thres) ? 1.f / length : 0;
     }

@@ -153,7 +153,7 @@ int SARTSolverMPI::solve(std::vector<double>& solution,
 
     double measurement_squared = 0;
     double measurement_squared_loc = 0;
-    for (auto m : measurement) {measurement_squared_loc += m * m;}
+    for (auto m : measurement) {measurement_squared_loc += (m > 0) ? m * m : 0;}  // exclude negative values (saturated pixels)
     MPI_Allreduce(&measurement_squared_loc, &measurement_squared, 1, MPI_DOUBLE, MPI_SUM, mpi_comm);
     
     std::vector<double> fitted(npixel);
@@ -186,9 +186,10 @@ int SARTSolverMPI::solve(std::vector<double>& solution,
             double diff_j = 0;
             if (ray_density[jvox] > ray_dens_thres) {
                 for (size_t ipix=0; ipix<npixel; ++ipix) {
-                    if (ray_length[ipix] > ray_length_thres) {
+                    const double meas = measurement[ipix];
+                    if ((ray_length[ipix] > ray_length_thres) && (meas >= 0)) {  // exlude negative values (saturated pixels)
                         const double prop_ray_length = (double)raytransfer.matrix(ipix, jvox) / ray_length[ipix];
-                        diff_j += prop_ray_length * (measurement[ipix] - fitted[ipix]);
+                        diff_j += prop_ray_length * (meas - fitted[ipix]);
                     }
                 }
                 diff_j *= relaxation / ray_density[jvox];
@@ -257,7 +258,7 @@ int LogSARTSolverMPI::solve(std::vector<double>& solution,
 
     double measurement_squared = 0;
     double measurement_squared_loc = 0;
-    for (auto m : measurement) {measurement_squared_loc += m * m;}
+    for (auto m : measurement) {measurement_squared_loc += (m > 0) ? m * m : 0;}  // exclude negative values (saturated pixels)
     MPI_Allreduce(&measurement_squared_loc, &measurement_squared, 1, MPI_DOUBLE, MPI_SUM, mpi_comm);
     
     std::vector<double> fitted(npixel);
@@ -290,7 +291,8 @@ int LogSARTSolverMPI::solve(std::vector<double>& solution,
             double fit_j = 0;
             if (ray_density[jvox] > ray_dens_thres) {
                 for (size_t ipix=0; ipix<npixel; ++ipix) {
-                    if (ray_length[ipix] > ray_length_thres) {
+                    const double meas = measurement[ipix];
+                    if ((ray_length[ipix] > ray_length_thres) && (meas >= 0)) {  // exlude negative values (saturated pixels)
                         const double prop_ray_length = (double)raytransfer.matrix(ipix, jvox) / ray_length[ipix];
                         obs_j += prop_ray_length * measurement[ipix];
                         fit_j += prop_ray_length * fitted[ipix];
