@@ -148,6 +148,11 @@ argparse::ArgumentParser parse_arguments(int argc, char *argv[]) {
         .default_value(false)
         .implicit_value(true);
 
+    program.add_argument("--serialized_read")
+        .help("Read RTM data in a serialized way (HDD optimization).")
+        .default_value(false)
+        .implicit_value(true);
+
     program.add_argument("input_files")
         .help("List of ray transfer matrix and camera image hdf5 files.")
         .remaining();

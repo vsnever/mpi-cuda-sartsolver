@@ -63,7 +63,16 @@ int main(int argc, char *argv[]){
     composite_image.set_max_cache_size((size_t)program.get<int>("--max_cached_frames"));
 
     RayTransferMatrix raytransfer(npixel_local, nvoxel, offset_pixel);
-    raytransfer.read_hdf5(sorted_matrix_files, rtm_name);
+
+    if (program.get<bool>("--serialized_read")) {  // works faster on HDDs
+        for (int id = 0; id < numproc; ++id) {
+            if (rank == id) raytransfer.read_hdf5(sorted_matrix_files, rtm_name);
+            MPI_Barrier(MPI_COMM_WORLD);
+        }
+    }
+    else {
+        raytransfer.read_hdf5(sorted_matrix_files, rtm_name);
+    }
 
     const bool use_logsolver = program.get<bool>("--logarithmic");
     const bool use_cpusolver = program.get<bool>("--use_cpu");
