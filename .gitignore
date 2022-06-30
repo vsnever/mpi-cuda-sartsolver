@@ -1,6 +1,6 @@
 *.o
 *.h5
-source/include
+source/include/argparse
 build
 sartsolver
 *.DS_Store

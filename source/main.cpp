@@ -7,6 +7,7 @@
 #include "raytransfer.hpp"
 #include "laplacian.hpp"
 #include "image.hpp"
+#include "solution.hpp"
 #include "sartsolver.hpp"
 #include "sartsolver_cuda.hpp"
 #include "hdf5files.hpp"
@@ -15,7 +16,6 @@
 int main(int argc, char *argv[]){
 
     auto program = parse_arguments(argc, argv);
-
     const auto time_intervals = parse_time_intervals(program.get<std::string>("--time_range"));
 
     std::vector<std::string> matrix_files;
@@ -62,6 +62,12 @@ int main(int argc, char *argv[]){
     CompositeImage composite_image(sorted_image_files, rtm_frame_masks, time_intervals, npixel_local, offset_pixel);
     composite_image.set_max_cache_size((size_t)program.get<int>("--max_cached_frames"));
 
+    const bool use_logsolver = program.get<bool>("--logarithmic");
+
+    const auto laplacian_file = program.get<std::string>("--laplacian_file");
+    LaplacianMatrix laplacian((laplacian_file.empty() || (rank && !use_logsolver)) ? 0 : nvoxel);
+    if (laplacian.nvoxel() > 0) laplacian.read_hdf5(laplacian_file); // only root process reads Laplacian matrix if solver is linear
+
     RayTransferMatrix raytransfer(npixel_local, nvoxel, offset_pixel);
 
     if (program.get<bool>("--serialized_read")) {  // works faster on HDDs
@@ -74,15 +80,8 @@ int main(int argc, char *argv[]){
         raytransfer.read_hdf5(sorted_matrix_files, rtm_name);
     }
 
-    const bool use_logsolver = program.get<bool>("--logarithmic");
-    const bool use_cpusolver = program.get<bool>("--use_cpu");
-
-    const auto laplacian_file = program.get<std::string>("--laplacian_file");
-    LaplacianMatrix laplacian((laplacian_file.empty() || (rank && !use_logsolver)) ? 0 : nvoxel);
-    if (laplacian.nvoxel() > 0) laplacian.read_hdf5(laplacian_file); // only root process reads Laplacian matrix if solver is linear
-
     BaseSARTSolverMPI *solver;
-    if (use_cpusolver) {
+    if (program.get<bool>("--use_cpu")) {
         if (use_logsolver) {
             solver = new LogSARTSolverMPI(raytransfer, laplacian);
         }
@@ -105,19 +104,19 @@ int main(int argc, char *argv[]){
     solver->set_relaxation(program.get<double>("--relaxation"));
     solver->set_max_iterations(program.get<int>("--max_iterations"));
 
-    std::vector<std::vector<double>> solutions;
-    std::vector<double> solution;
-    std::vector<double> frame;
+    Solution solution(program.get<std::string>("--output_file"), camera_names, nvoxel);
+    solution.set_max_cache_size((size_t)program.get<int>("--max_cached_solutions"));
+
+    std::vector<double> solution_vec, frame;
 
     while(composite_image.next_frame(frame)) {
-        solver->solve(solution, frame);
-        if (rank == 0) solutions.push_back(std::vector<double>(solution));
-        if (program.get<bool>("--no_guess")) solution.clear();
+        const auto status = solver->solve(solution_vec, frame);
+        if (rank == 0) {
+            solution.add(solution_vec, status, composite_image.frame_time(), composite_image.camera_frame_time());
+        }
+        if (program.get<bool>("--no_guess")) solution_vec.clear();
     }
-
     delete solver;
-
-    if (rank == 0) write_solutions(program.get<std::string>("--output_file"), solutions);
 
     MPI_Finalize();
 

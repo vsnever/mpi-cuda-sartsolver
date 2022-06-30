@@ -74,5 +74,3 @@ int check_rtm_image_consistency(const std::map<std::string, std::vector<std::str
 std::map<std::string, std::vector<int>> read_rtm_frame_masks(const std::map<std::string, std::vector<std::string>>& sorted_matrix_files);
 
 std::pair<size_t, size_t> get_total_rtm_size(const std::map<std::string, std::vector<std::string>>& sorted_matrix_files);
-
-int write_solutions(std::string filename, const std::vector<std::vector<double>>& solutions);

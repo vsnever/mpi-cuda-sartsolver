@@ -222,8 +222,7 @@ int SARTSolverMPICuda::solve(std::vector<double>& solution,
     double convergence_prev = 0;
     int iter = 0;
     for (iter=0; iter<max_iterations; ++iter) {
-
-        std::cout << iter << std::endl;
+        // std::cout << iter << std::endl;
 
         cudaMemset(dev_gradpen, 0, nvoxel * sizeof(float));
         if (laplacian.size()) {
@@ -303,8 +302,7 @@ int LogSARTSolverMPICuda::solve(std::vector<double>& solution,
     double convergence_prev = 0;
     int iter = 0;
     for (iter=0; iter<max_iterations; ++iter) {
-
-        std::cout << iter << std::endl;
+        // std::cout << iter << std::endl;
 
         cudaMemset(dev_gradpen, 0, nvoxel * sizeof(float));
         if (laplacian.size()) {

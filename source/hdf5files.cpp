@@ -8,7 +8,7 @@
 #include "hdf5files.hpp"
 
 
-#define TIME_EPSILON 1.e-10
+#define TIME_EPSILON 1.e-9
 
 
 int categorize_input_files(const std::vector<std::string>& input_files,
@@ -380,32 +380,4 @@ std::pair<size_t, size_t> get_total_rtm_size(const std::map<std::string, std::ve
     }
 
     return std::pair(npixel, nvoxel);
-}
-
-
-int write_solutions(std::string filename, const std::vector<std::vector<double>>& solutions) {
-
-    try {
-        H5::H5File file(filename, H5F_ACC_TRUNC);
-
-        hsize_t dims[] = {solutions.size(), solutions.front().size()};
-        hsize_t mem_size = solutions.front().size();
-        hsize_t dset_offset[] = {0, 0};
-        const hsize_t count[] = {1, mem_size};
-        H5::DataSpace dataspace(2, dims);
-        H5::DataSpace memspace(1, &mem_size);
-
-        H5::DataSet dataset = file.createDataSet("solution", H5::FloatType(H5::PredType::NATIVE_DOUBLE), dataspace);
-        for (size_t it=0; it<solutions.size(); ++it) {
-            dset_offset[0] = it;
-            dataspace.selectHyperslab(H5S_SELECT_SET, count, dset_offset);        
-            dataset.write(solutions[it].data(), H5::PredType::NATIVE_DOUBLE, memspace, dataspace);
-        }
-    }
-    catch (const std::runtime_error& err) {
-        std::cerr << err.what() << std::endl;
-        std::exit(1);
-    }
-
-    return 0;
 }

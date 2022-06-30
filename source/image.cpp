@@ -17,6 +17,10 @@ CompositeImage::CompositeImage(std::map<std::string, std::string>& image_files,
                                size_t offset_pixel):
                 files(image_files),
                 rtm_frame_masks(frame_masks) {
+    if (npixel == 0) {
+        std::cerr << "Argument npixel must be positive." << std::endl;
+        std::exit(1);
+    }
     npix = npixel;
     offset_pix = offset_pixel;
     cache_offset = 0;
@@ -142,10 +146,10 @@ void CompositeImage::frame_indices_from_timepairs(const std::vector<std::vector<
             const size_t iframe = (size_t)std::round((tpair.first - min_time) / step);
             for (int i=-1; i<2; ++i) {  // updating also previous and the next frames
                 const size_t index = num_cam * (iframe + i) + icam;
-                const double dist = std::abs(tpair.first - min_time - (iframe + i) * step);
-                if (dist + TIME_EPSILON < composite_frame_grid[index].first) {
+                const double delta = tpair.first - min_time - (iframe + i) * step;
+                if (std::abs(delta) + TIME_EPSILON < std::abs(composite_frame_grid[index].first)) {
                     // "+ TIME_EPSILON" to prefer previous frame over the next one if the frames are equally-distant
-                    composite_frame_grid[index].first = dist;
+                    composite_frame_grid[index].first = delta;
                     composite_frame_grid[index].second = tpair.second;
                 }
             }
@@ -162,11 +166,12 @@ void CompositeImage::frame_indices_from_timepairs(const std::vector<std::vector<
 
         for (size_t icam=0; icam<num_cam; ++icam) {
             const size_t index = num_cam * iframe + icam;
-            const double tc = composite_frame_grid[index].first;
-            if (tc > threshold + TIME_EPSILON) break;
+            const double delta = composite_frame_grid[index].first;
+            const double abs_delta = std::abs(delta);
+            if (abs_delta > threshold + TIME_EPSILON) break;
             iframe_indices.push_back(composite_frame_grid[index].second);
-            icamera_time.push_back(tc);
-            time_delta += tc;
+            icamera_time.push_back(ftime + delta);
+            time_delta += abs_delta;
         }
 
         if (iframe_indices.size() == num_cam) {
@@ -221,20 +226,37 @@ bool CompositeImage::next_frame(std::vector<double>& fr) {
 }
 
 
-std::pair<double, std::vector<double>> CompositeImage::frame_time(size_t i) const {
+double CompositeImage::frame_time(size_t i) const {
     if (i >= time.size()) {
         std::cerr << "Index " << i << " is out of bounds (" << time.size() << ")." << std::endl;
         std::exit(1);
     }
 
-    return std::make_pair(time[i], camera_time[i]);
+    return time[i];
 }
 
 
-std::pair<double, std::vector<double>> CompositeImage::frame_time() const {
+double CompositeImage::frame_time() const {
 
-    return std::make_pair(time[cframe_index], camera_time[cframe_index]);
+    return time[cframe_index];
 }
+
+
+std::vector<double> CompositeImage::camera_frame_time(size_t i) const {
+    if (i >= time.size()) {
+        std::cerr << "Index " << i << " is out of bounds (" << time.size() << ")." << std::endl;
+        std::exit(1);
+    }
+
+    return camera_time[i];
+}
+
+
+std::vector<double> CompositeImage::camera_frame_time() const {
+
+    return camera_time[cframe_index];
+}
+
 
 int CompositeImage::cache_hdf5(size_t itime) {
 

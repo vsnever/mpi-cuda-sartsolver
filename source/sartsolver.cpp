@@ -171,8 +171,7 @@ int SARTSolverMPI::solve(std::vector<double>& solution,
 
     double convergence_prev = 0;
     for (int iter=0; iter<max_iterations; ++iter) {
-
-        std::cout << iter << std::endl;
+        // std::cout << iter << std::endl;
 
         std::fill(grad_penalty.begin(), grad_penalty.end(), 0);
         for (size_t i=0; i<laplacian.size(); ++i) {
@@ -276,7 +275,7 @@ int LogSARTSolverMPI::solve(std::vector<double>& solution,
 
     double convergence_prev = 0;
     for (int iter=0; iter<max_iterations; ++iter) {
-        std::cout << iter << std::endl;
+        // std::cout << iter << std::endl;
 
         std::fill(grad_penalty.begin(), grad_penalty.end(), 0);
         for (size_t i=0; i<laplacian.size(); ++i) {

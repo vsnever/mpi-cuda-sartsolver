@@ -138,6 +138,11 @@ argparse::ArgumentParser parse_arguments(int argc, char *argv[]) {
         .default_value(100)
         .scan<'i', int>();
 
+    program.add_argument("--max_cached_solutions")
+        .help("Maximum number of cached solutions.")
+        .default_value(100)
+        .scan<'i', int>();
+
     program.add_argument("--no_guess")
         .help("Do not use solution found on previous time moment as initial guess for the next one.")
         .default_value(false)
@@ -205,6 +210,12 @@ argparse::ArgumentParser parse_arguments(int argc, char *argv[]) {
     auto max_cached_frames = program.get<int>("--max_cached_frames");
     if (max_cached_frames <= 0) {
         std::cerr << "Argument max_cached_frames must be positive." << std::endl;
+        std::exit(1);
+    }
+
+    auto max_cached_solutions = program.get<int>("--max_cached_solutions");
+    if (max_cached_solutions <= 0) {
+        std::cerr << "Argument max_cached_solutions must be positive." << std::endl;
         std::exit(1);
     }
 

@@ -38,8 +38,11 @@ public:
     std::vector<double> frame(size_t i);
     std::vector<double> frame();
 
-    std::pair<double, std::vector<double>> frame_time(size_t i) const;
-    std::pair<double, std::vector<double>> frame_time() const;
+    double frame_time(size_t i) const;
+    double frame_time() const;
+
+    std::vector<double> camera_frame_time(size_t i) const;
+    std::vector<double> camera_frame_time() const;
 
     inline size_t offset_pixel() const {return offset_pix;};
     inline size_t npixel() const {return npix;};
