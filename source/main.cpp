@@ -70,14 +70,14 @@ int main(int argc, char *argv[]){
 
     RayTransferMatrix raytransfer(npixel_local, nvoxel, offset_pixel);
 
-    if (program.get<bool>("--serialized_read")) {  // works faster on HDDs
+    if (program.get<bool>("--parallel_read")) { // works faster on high-IOPS storage
+        raytransfer.read_hdf5(sorted_matrix_files, rtm_name);
+    }
+    else { // works faster on HDDs
         for (int id = 0; id < numproc; ++id) {
             if (rank == id) raytransfer.read_hdf5(sorted_matrix_files, rtm_name);
             MPI_Barrier(MPI_COMM_WORLD);
         }
-    }
-    else {
-        raytransfer.read_hdf5(sorted_matrix_files, rtm_name);
     }
 
     BaseSARTSolverMPI *solver;
@@ -91,10 +91,10 @@ int main(int argc, char *argv[]){
     }
     else {
         if (use_logsolver) {
-            solver = new LogSARTSolverMPICuda(raytransfer, laplacian);
+            solver = new LogSARTSolverMPICuda(raytransfer, laplacian, rank);
         }
         else {
-            solver = new SARTSolverMPICuda(raytransfer, laplacian);
+            solver = new SARTSolverMPICuda(raytransfer, laplacian, rank);
         }
     }
     solver->set_ray_density_threshold(program.get<double>("--ray_density_threshold"));
