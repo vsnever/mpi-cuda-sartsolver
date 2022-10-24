@@ -17,7 +17,6 @@ class Solution {
     size_t max_cache_size;
     bool first_flush;
 
-    int flush_hdf5();
     int create_hdf5();
     int update_hdf5();
 
@@ -27,6 +26,8 @@ public:
     void set_max_cache_size(size_t value);
 
     int add(const std::vector<double>& solution, int status, double time, const std::vector<double>& camera_time);
+
+    int flush_hdf5();
 
     inline size_t nvoxel() const {return nvox;};
 

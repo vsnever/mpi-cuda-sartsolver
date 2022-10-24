@@ -21,7 +21,7 @@ Solution::Solution(const std::string& filename,
 
 
 Solution::~Solution() {
-    if (cached_solutions.size()) flush_hdf5();
+    flush_hdf5();
 }
 
 size_t Solution::get_max_cache_size() const{return max_cache_size;}
@@ -94,7 +94,7 @@ int Solution::create_hdf5() {
         int fill_value_int = 0;
         cparams_1d.setFillValue(H5::PredType::NATIVE_DOUBLE, &fill_value_int);
         group.createDataSet("status", H5::PredType::NATIVE_INT, dspace_1d, cparams_1d)
-            .write(cached_status.data(), H5::PredType::NATIVE_INT);
+             .write(cached_status.data(), H5::PredType::NATIVE_INT);
     }
     catch (const std::runtime_error& err) {
         std::cerr << err.what() << std::endl;
@@ -158,6 +158,8 @@ int Solution::update_hdf5() {
 }
 
 int Solution::flush_hdf5() {
+
+    if (!cached_solutions.size()) return 0;
 
     int res = (first_flush) ? create_hdf5() : update_hdf5();
 

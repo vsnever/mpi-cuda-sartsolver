@@ -267,6 +267,7 @@ int CompositeImage::cache_hdf5(size_t itime) {
     try {
         size_t start_pixel = 0;
 
+        size_t icam = 0;
         for (const auto& p : rtm_frame_masks) {
             const auto& mask = p.second;
             auto npixel_masked = std::accumulate(mask.begin(), mask.end(), 0);
@@ -279,7 +280,7 @@ int CompositeImage::cache_hdf5(size_t itime) {
                 auto dataspace = dset.getSpace();
                 hsize_t dims[3];
                 dataspace.getSimpleExtentDims(dims);
-                hsize_t dset_offset[] = {itime, 0, 0};
+                hsize_t dset_offset[] = {frame_indices[itime][icam], 0, 0};
                 const hsize_t count[] = {1, dims[1], dims[2]};
                 const hsize_t frame_size_1d = dims[1] * dims[2];
 
@@ -292,7 +293,7 @@ int CompositeImage::cache_hdf5(size_t itime) {
                 const size_t pix_offset = (offset_pix > start_pixel) ? 0 : start_pixel - offset_pix;
 
                 for (size_t it=0; it<cache_size_t; ++it) {
-                    dset_offset[0] = itime + it;
+                    dset_offset[0] = frame_indices[itime + it][icam];
                     dataspace.selectHyperslab(H5S_SELECT_SET, count, dset_offset);
                     dset.read(full_frame.data(), H5::PredType::NATIVE_DOUBLE, memspace, dataspace);
 
@@ -308,9 +309,11 @@ int CompositeImage::cache_hdf5(size_t itime) {
 
             }
             start_pixel += (size_t)npixel_masked;
+            icam++;
 
             if (offset_pix + npix < start_pixel) break;
         }
+        cache_offset = itime;
     }
     catch (const std::runtime_error& err) {
         std::cerr << err.what() << std::endl;
