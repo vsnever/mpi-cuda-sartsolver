@@ -8,6 +8,7 @@
 #include "laplacian.hpp"
 #include "image.hpp"
 #include "solution.hpp"
+#include "voxelgrid.hpp"
 #include "sartsolver.hpp"
 #include "sartsolver_cuda.hpp"
 #include "hdf5files.hpp"
@@ -107,6 +108,18 @@ int main(int argc, char *argv[]){
     Solution solution(program.get<std::string>("--output_file"), camera_names, nvoxel);
     solution.set_max_cache_size((size_t)program.get<int>("--max_cached_solutions"));
 
+    const auto coordsys = BaseVoxelGrid::get_coordinate_system_hdf5(sorted_matrix_files.begin()->second[0], "rtm/voxel_map");
+    BaseVoxelGrid *voxelgrid;
+
+    if (coordsys == BaseVoxelGrid::CYLINDRICAL) {
+        voxelgrid = new CylindricalVoxelGrid();
+    }
+    else {
+        voxelgrid = new CartesianVoxelGrid();
+    }
+
+    if (rank == 0) voxelgrid->read_hdf5(sorted_matrix_files.begin()->second, "rtm/voxel_map");
+
     std::vector<double> solution_vec, frame;
 
     while(composite_image.next_frame(frame)) {
@@ -116,7 +129,12 @@ int main(int argc, char *argv[]){
         }
         if (program.get<bool>("--no_guess")) solution_vec.clear();
     }
+
+    solution.flush_hdf5();
+    if (rank == 0) voxelgrid->write_hdf5(program.get<std::string>("--output_file"), "voxel_map");
+
     delete solver;
+    delete voxelgrid;
 
     MPI_Finalize();
 

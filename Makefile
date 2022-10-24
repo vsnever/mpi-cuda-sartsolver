@@ -41,11 +41,11 @@ HDF5FLAGS = -I$(HDF5_HOME)/include
 
 LDFLAGS = -L$(CUDA_HOME)/lib64 -lhdf5 -lhdf5_cpp -lcublas -lcudart
 
-HEADERS = $(INCLUDE_DIR)/arguments.hpp $(INCLUDE_DIR)/hdf5files.hpp $(INCLUDE_DIR)/raytransfer.hpp $(INCLUDE_DIR)/laplacian.hpp $(INCLUDE_DIR)/sartsolver.hpp $(INCLUDE_DIR)/sartsolver_cuda.hpp $(INCLUDE_DIR)/image.hpp $(INCLUDE_DIR)/solution.hpp
+HEADERS = $(INCLUDE_DIR)/arguments.hpp $(INCLUDE_DIR)/hdf5files.hpp $(INCLUDE_DIR)/raytransfer.hpp $(INCLUDE_DIR)/laplacian.hpp $(INCLUDE_DIR)/sartsolver.hpp $(INCLUDE_DIR)/sartsolver_cuda.hpp $(INCLUDE_DIR)/image.hpp $(INCLUDE_DIR)/solution.hpp $(INCLUDE_DIR)/voxelgrid.hpp
 
 TARGETS = sartsolver
 
-OBJS = $(BUILD_DIR)/raytransfer.o $(BUILD_DIR)/laplacian.o $(BUILD_DIR)/image.o $(BUILD_DIR)/solution.o $(BUILD_DIR)/sartsolver.o $(BUILD_DIR)/sartsolver_cuda.o $(BUILD_DIR)/sart_kernels.o $(BUILD_DIR)/arguments.o $(BUILD_DIR)/hdf5files.o $(BUILD_DIR)/main.o
+OBJS = $(BUILD_DIR)/raytransfer.o $(BUILD_DIR)/laplacian.o $(BUILD_DIR)/image.o $(BUILD_DIR)/solution.o $(BUILD_DIR)/voxelgrid.o $(BUILD_DIR)/sartsolver.o $(BUILD_DIR)/sartsolver_cuda.o $(BUILD_DIR)/sart_kernels.o $(BUILD_DIR)/arguments.o $(BUILD_DIR)/hdf5files.o $(BUILD_DIR)/main.o
 
 all: $(TARGETS)
 
@@ -63,6 +63,9 @@ $(BUILD_DIR)/image.o: $(SOURCE_DIR)/image.cpp $(INCLUDE_DIR)/image.hpp | $(BUILD
 
 $(BUILD_DIR)/solution.o: $(SOURCE_DIR)/solution.cpp $(INCLUDE_DIR)/solution.hpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(HDF5FLAGS) -c $(SOURCE_DIR)/solution.cpp -o $@
+
+$(BUILD_DIR)/voxelgrid.o: $(SOURCE_DIR)/voxelgrid.cpp $(INCLUDE_DIR)/voxelgrid.hpp | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(HDF5FLAGS) -c $(SOURCE_DIR)/voxelgrid.cpp -o $@
 
 $(BUILD_DIR)/sartsolver.o: $(SOURCE_DIR)/sartsolver.cpp $(INCLUDE_DIR)/sartsolver.hpp $(INCLUDE_DIR)/raytransfer.hpp $(INCLUDE_DIR)/laplacian.hpp | $(BUILD_DIR)
 	$(MPICXX) $(CXXFLAGS) -c $(SOURCE_DIR)/sartsolver.cpp -o $@
