@@ -6,7 +6,7 @@
 
 Solution::Solution(const std::string& filename,
                    const std::vector<std::string>& camera_names,
-                   size_t nvoxel):
+                   size_t nvoxel, size_t cache_size):
           filename(filename) {
 
     if (nvoxel == 0) {
@@ -15,7 +15,7 @@ Solution::Solution(const std::string& filename,
     }
     nvox = nvoxel;
     first_flush = true;
-    max_cache_size = 100;
+    set_max_cache_size(cache_size);
     for (const auto &name : camera_names) { cached_camera_time[name] = std::vector<double>(); }
 }
 
@@ -45,7 +45,7 @@ int Solution::add(const std::vector<double>& solution, int status, double time, 
         ++it;
     }
 
-    if (cached_solutions.size() == max_cache_size) return flush_hdf5();
+    if (cached_solutions.size() >= max_cache_size) return flush_hdf5();
 
     return 0;
 }

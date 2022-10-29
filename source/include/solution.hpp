@@ -33,7 +33,7 @@ public:
 
     Solution(const std::string& filename,
              const std::vector<std::string>& camera_names,
-             size_t nvoxel);
+             size_t nvoxel, size_t cache_size=100);
 
     ~Solution();
 };
