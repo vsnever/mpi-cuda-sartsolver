@@ -1,5 +1,6 @@
 CXX = g++
-MPICXX = mpic++
+H5CXX = h5c++
+MPICXX = mpicxx
 NVCC = nvcc
 
 SOURCE_DIR = source
@@ -53,19 +54,19 @@ $(TARGETS): $(OBJS)
 	$(MPICXX) -o $@ $^ $(LDFLAGS)
 
 $(BUILD_DIR)/raytransfer.o: $(SOURCE_DIR)/raytransfer.cpp $(INCLUDE_DIR)/raytransfer.hpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(HDF5FLAGS) -c $(SOURCE_DIR)/raytransfer.cpp -o $@
+	$(H5CXX) $(CXXFLAGS) -c $(SOURCE_DIR)/raytransfer.cpp -o $@
 
 $(BUILD_DIR)/laplacian.o: $(SOURCE_DIR)/laplacian.cpp $(INCLUDE_DIR)/laplacian.hpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(HDF5FLAGS) -c $(SOURCE_DIR)/laplacian.cpp -o $@
+	$(H5CXX) $(CXXFLAGS) -c $(SOURCE_DIR)/laplacian.cpp -o $@
 
 $(BUILD_DIR)/image.o: $(SOURCE_DIR)/image.cpp $(INCLUDE_DIR)/image.hpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(HDF5FLAGS) -c $(SOURCE_DIR)/image.cpp -o $@
+	$(H5CXX) $(CXXFLAGS) -c $(SOURCE_DIR)/image.cpp -o $@
 
 $(BUILD_DIR)/solution.o: $(SOURCE_DIR)/solution.cpp $(INCLUDE_DIR)/solution.hpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(HDF5FLAGS) -c $(SOURCE_DIR)/solution.cpp -o $@
+	$(H5CXX) $(CXXFLAGS) -c $(SOURCE_DIR)/solution.cpp -o $@
 
 $(BUILD_DIR)/voxelgrid.o: $(SOURCE_DIR)/voxelgrid.cpp $(INCLUDE_DIR)/voxelgrid.hpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(HDF5FLAGS) -c $(SOURCE_DIR)/voxelgrid.cpp -o $@
+	$(H5CXX) $(CXXFLAGS) -c $(SOURCE_DIR)/voxelgrid.cpp -o $@
 
 $(BUILD_DIR)/sartsolver.o: $(SOURCE_DIR)/sartsolver.cpp $(INCLUDE_DIR)/sartsolver.hpp $(INCLUDE_DIR)/raytransfer.hpp $(INCLUDE_DIR)/laplacian.hpp | $(BUILD_DIR)
 	$(MPICXX) $(CXXFLAGS) -c $(SOURCE_DIR)/sartsolver.cpp -o $@
@@ -80,7 +81,7 @@ $(BUILD_DIR)/arguments.o: $(SOURCE_DIR)/arguments.cpp $(INCLUDE_DIR)/arguments.h
 	$(CXX) $(CXXFLAGS) -c $(SOURCE_DIR)/arguments.cpp -o $@
 
 $(BUILD_DIR)/hdf5files.o: $(SOURCE_DIR)/hdf5files.cpp $(INCLUDE_DIR)/hdf5files.hpp | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(HDF5FLAGS) -c $(SOURCE_DIR)/hdf5files.cpp -o $@
+	$(H5CXX) $(CXXFLAGS) -c $(SOURCE_DIR)/hdf5files.cpp -o $@
 
 $(BUILD_DIR)/main.o: $(SOURCE_DIR)/main.cpp $(HEADERS) | $(BUILD_DIR)
 	$(MPICXX) $(CXXFLAGS) $(HDF5FLAGS) $(CUDAFLAGS) -c $(SOURCE_DIR)/main.cpp -o $@
