@@ -1,4 +1,5 @@
 
+#include <limits>
 #include "arguments.hpp"
 
 std::vector<std::array<double, 4>> parse_time_intervals(std::string time_string) {

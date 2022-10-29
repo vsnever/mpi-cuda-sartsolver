@@ -1,9 +1,11 @@
 
 #pragma once
 
+#include <array>
 #include <vector>
 #include <map>
 #include <string>
+#include <utility>
 
 
 class CompositeImage {

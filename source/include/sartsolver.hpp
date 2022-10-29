@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <vector>
 #include "raytransfer.hpp"
 #include "laplacian.hpp"
 

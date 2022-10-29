@@ -1,6 +1,5 @@
 
 #include <memory>
-#include <map>
 #include <cmath>
 #include <numeric>
 #include <algorithm>
