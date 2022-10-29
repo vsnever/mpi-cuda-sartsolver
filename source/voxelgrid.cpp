@@ -86,7 +86,7 @@ int BaseVoxelGrid::read_hdf5(const std::vector<std::string>& filenames, std::str
                 voxmap[iflat] = value[indx] + nvoxel_prev;
                 nvoxel = (value[indx] > nvoxel) ? value[indx] : nvoxel;
             }
-            nvoxel_prev += nvoxel;
+            nvoxel_prev += nvoxel + 1;
         }
         nvox = (size_t)nvoxel_prev;
     }
