@@ -1,5 +1,13 @@
+// Copyright (c) 2022 - 2023, Project Center ITER, 123060, ul. Raspletina, 11 bld. 2, Moscow, Russia
+// Author: Vladislav Neverov, neverov_vs@nrcki.ru (NRC "Kurchatov Institute")
+// 
+// All rights reserved.
+// 
+// Redistribution and use in source and binary form, with or without modifications,
+// is prohibited without permission of the copyright holder.
 
 #include <algorithm>
+#include <chrono>
 
 #include "mpi.h"
 
@@ -121,11 +129,16 @@ int main(int argc, char *argv[]){
     if (rank == 0) voxelgrid->read_hdf5(sorted_matrix_files.begin()->second, "rtm/voxel_map");
 
     std::vector<double> solution_vec, frame;
+    std::chrono::steady_clock clock;
+    std::chrono::time_point<std::chrono::steady_clock> last;
 
     while(composite_image.next_frame(frame)) {
+        last = clock.now();
         const auto status = solver->solve(solution_vec, frame);
         if (rank == 0) {
             solution.add(solution_vec, status, composite_image.frame_time(), composite_image.camera_frame_time());
+            std::chrono::duration<double,std::milli> duration(clock.now() - last);
+            std::cout << "Processed in: " << duration.count() << " ms" << std::endl;
         }
         if (program.get<bool>("--no_guess")) solution_vec.clear();
     }

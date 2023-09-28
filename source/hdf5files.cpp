@@ -1,3 +1,10 @@
+// Copyright (c) 2022 - 2023, Project Center ITER, 123060, ul. Raspletina, 11 bld. 2, Moscow, Russia
+// Author: Vladislav Neverov, neverov_vs@nrcki.ru (NRC "Kurchatov Institute")
+// 
+// All rights reserved.
+// 
+// Redistribution and use in source and binary form, with or without modifications,
+// is prohibited without permission of the copyright holder.
 
 #include <memory>
 #include <cmath>
