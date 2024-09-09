@@ -3,7 +3,7 @@
 // 
 // All rights reserved.
 // 
-// Redistribution and use in source and binary form, with or without modifications,
+// Redistribution use in source and binary form, with or without modifications,
 // is prohibited without permission of the copyright holder.
 
 #pragma once
