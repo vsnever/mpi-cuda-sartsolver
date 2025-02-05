@@ -24,16 +24,15 @@
 
 int main(int argc, char *argv[]){
 
-    auto program = parse_arguments(argc, argv);
-    const auto time_intervals = parse_time_intervals(program.get<std::string>("--time_range"));
+    const auto config = parse_arguments(argc, argv);
+    const auto time_intervals = parse_time_intervals(config.time_range);
 
     std::vector<std::string> matrix_files;
     std::vector<std::string> image_files;
 
-    categorize_input_files(program.get<std::vector<std::string>>("input_files"), matrix_files, image_files);
+    categorize_input_files(config.input_files, matrix_files, image_files);
 
-    const std::string rtm_name(program.get<std::string>("--raytransfer_name"));
-
+    const std::string rtm_name(config.raytransfer_name);
     check_group_attribute_consistency<double>(matrix_files, "rtm/" + rtm_name, {"wavelength"},
                                               H5::PredType::NATIVE_DOUBLE);
     check_group_attribute_consistency<size_t>(matrix_files, "rtm/voxel_map", {"nx", "ny", "nz"},
@@ -52,7 +51,7 @@ int main(int argc, char *argv[]){
     for (auto const& cam_name : sorted_image_files) camera_names.push_back(cam_name.first);
 
 
-    check_rtm_image_consistency(sorted_matrix_files, sorted_image_files, rtm_name, program.get<double>("--wavelength_threshold"));
+    check_rtm_image_consistency(sorted_matrix_files, sorted_image_files, rtm_name, config.wavelength_threshold);
 
     size_t npixel, nvoxel;
     std::tie(npixel, nvoxel) = get_total_rtm_size(sorted_matrix_files);
@@ -69,17 +68,14 @@ int main(int argc, char *argv[]){
     const auto npixel_local = ((size_t)rank < npixel % (size_t)numproc) ? npixel / (size_t)numproc + 1 : npixel / (size_t)numproc;
 
     CompositeImage composite_image(sorted_image_files, rtm_frame_masks, time_intervals, npixel_local, offset_pixel);
-    composite_image.set_max_cache_size((size_t)program.get<int>("--max_cached_frames"));
+    composite_image.set_max_cache_size((size_t)config.max_cached_frames);
 
-    const bool use_logsolver = program.get<bool>("--logarithmic");
-
-    const auto laplacian_file = program.get<std::string>("--laplacian_file");
-    LaplacianMatrix laplacian((laplacian_file.empty() || (rank && !use_logsolver)) ? 0 : nvoxel);
-    if (laplacian.nvoxel() > 0) laplacian.read_hdf5(laplacian_file); // only root process reads Laplacian matrix if solver is linear
+    LaplacianMatrix laplacian((config.laplacian_file.empty() || (rank && !config.logarithmic)) ? 0 : nvoxel);
+    if (laplacian.nvoxel() > 0) laplacian.read_hdf5(config.laplacian_file); // only root process reads Laplacian matrix if solver is linear
 
     RayTransferMatrix raytransfer(npixel_local, nvoxel, offset_pixel);
 
-    if (program.get<bool>("--parallel_read")) { // works faster on high-IOPS storage
+    if (config.parallel_read) { // works faster on high-IOPS storage
         raytransfer.read_hdf5(sorted_matrix_files, rtm_name);
     }
     else { // works faster on HDDs
@@ -90,31 +86,31 @@ int main(int argc, char *argv[]){
     }
 
     BaseSARTSolverMPI *solver;
-    if (program.get<bool>("--use_cpu")) {
-        if (use_logsolver) {
+    if (config.use_cpu) {
+        if (config.logarithmic) {
             solver = new LogSARTSolverMPI(raytransfer, laplacian);
         }
         else {
             solver = new SARTSolverMPI(raytransfer, laplacian);
         }
-    }
+    /
     else {
-        if (use_logsolver) {
+        if (config.logarithmic) {
             solver = new LogSARTSolverMPICuda(raytransfer, laplacian, rank);
         }
         else {
             solver = new SARTSolverMPICuda(raytransfer, laplacian, rank);
         }
     }
-    solver->set_ray_density_threshold(program.get<double>("--ray_density_threshold"));
-    solver->set_ray_length_threshold(program.get<double>("--ray_length_threshold"));
-    solver->set_convolution_tolerance(program.get<double>("--conv_tolerance"));
-    solver->set_beta_laplace(program.get<double>("--beta_laplace"));
-    solver->set_relaxation(program.get<double>("--relaxation"));
-    solver->set_max_iterations(program.get<int>("--max_iterations"));
+    solver->set_ray_density_threshold(config.ray_density_threshold);
+    solver->set_ray_length_threshold(config.ray_length_threshold);
+    solver->set_convolution_tolerance(config.conv_tolerance);
+    solver->set_beta_laplace(config.beta_laplace);
+    solver->set_relaxation(config.relaxation);
+    solver->set_max_iterations(config.max_iterations);
 
-    Solution solution(program.get<std::string>("--output_file"), camera_names, nvoxel);
-    solution.set_max_cache_size((size_t)program.get<int>("--max_cached_solutions"));
+    Solution solution(config.output_file, camera_names, nvoxel);
+    solution.set_max_cache_size((size_t)config.max_cached_solutions);
 
     const auto coordsys = BaseVoxelGrid::get_coordinate_system_hdf5(sorted_matrix_files.begin()->second[0], "rtm/voxel_map");
     BaseVoxelGrid *voxelgrid;
@@ -140,11 +136,11 @@ int main(int argc, char *argv[]){
             std::chrono::duration<double,std::milli> duration(clock.now() - last);
             std::cout << "Processed in: " << duration.count() << " ms" << std::endl;
         }
-        if (program.get<bool>("--no_guess")) solution_vec.clear();
+        if (config.no_guess) solution_vec.clear();
     }
 
     solution.flush_hdf5();
-    if (rank == 0) voxelgrid->write_hdf5(program.get<std::string>("--output_file"), "voxel_map");
+    if (rank == 0) voxelgrid->write_hdf5(config.output_file, "voxel_map");
 
     delete solver;
     delete voxelgrid;

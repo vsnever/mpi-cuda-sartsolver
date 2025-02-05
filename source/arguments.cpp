@@ -79,7 +79,7 @@ std::vector<std::array<double, 4>> parse_time_intervals(std::string time_string)
 }
 
 
-argparse::ArgumentParser parse_arguments(int argc, char *argv[]) {
+Config parse_arguments(int argc, char *argv[]) {
 
     argparse::ArgumentParser program("Impurity flux reconstruction for ITER: emissivity");
 
@@ -179,59 +179,73 @@ argparse::ArgumentParser parse_arguments(int argc, char *argv[]) {
         std::exit(1);
     }
 
-    auto ray_density_threshold = program.get<double>("--ray_density_threshold");
-    if (ray_density_threshold < 0) {
-        std::cerr << "Argument ray_density_threshold must be >= 0, " << ray_density_threshold << " given." << std::endl;
+    Config config;
+
+    config.ray_density_threshold = program.get<double>("--ray_density_threshold");
+    if (config.ray_density_threshold < 0) {
+        std::cerr << "Argument ray_density_threshold must be >= 0, " << config.ray_density_threshold << " given." << std::endl;
         std::exit(1);
     }
 
-    auto ray_length_threshold = program.get<double>("--ray_length_threshold");
-    if (ray_length_threshold < 0) {
-        std::cerr << "Argument ray_length_threshold must be >= 0, " << ray_length_threshold << " given." << std::endl;
+    config.ray_length_threshold = program.get<double>("--ray_length_threshold");
+    if (config.ray_length_threshold < 0) {
+        std::cerr << "Argument ray_length_threshold must be >= 0, " << config.ray_length_threshold << " given." << std::endl;
         std::exit(1);
     }
 
-    auto max_iterations = program.get<int>("--max_iterations");
-    if (max_iterations < 1) {
-        std::cerr << "Argument max_iterations must be >= 1, " << max_iterations << " given." << std::endl;
+    config.max_iterations = program.get<int>("--max_iterations");
+    if (config.max_iterations < 1) {
+        std::cerr << "Argument max_iterations must be >= 1, " << config.max_iterations << " given." << std::endl;
         std::exit(1);
     }
 
-    auto conv_tolerance = program.get<double>("--conv_tolerance");
-    if (conv_tolerance <= 0) {
-        std::cerr << "Argument conv_tolerance must be > 0, " << conv_tolerance << " given." << std::endl;
+    config.conv_tolerance = program.get<double>("--conv_tolerance");
+    if (config.conv_tolerance <= 0) {
+        std::cerr << "Argument conv_tolerance must be > 0, " << config.conv_tolerance << " given." << std::endl;
         std::exit(1);
     }
 
-    auto relaxation = program.get<double>("--relaxation");
-    if ((relaxation <= 0) || (relaxation > 1.)) {
-        std::cerr << "Argument relaxation must be within (0, 1] interval," << relaxation << " given." << std::endl;
+    config.relaxation = program.get<double>("--relaxation");
+    if ((config.relaxation <= 0) || (config.relaxation > 1.)) {
+        std::cerr << "Argument relaxation must be within (0, 1] interval," << config.relaxation << " given." << std::endl;
         std::exit(1);
     }
 
-    auto beta_laplace = program.get<double>("--beta_laplace");
-    if (beta_laplace < 0) {
+    config.beta_laplace = program.get<double>("--beta_laplace");
+    if (config.beta_laplace < 0) {
         std::cerr << "Argument beta_laplace must be positive." << std::endl;
         std::exit(1);
     }
 
-    auto max_cached_frames = program.get<int>("--max_cached_frames");
-    if (max_cached_frames <= 0) {
+    config.max_cached_frames = program.get<int>("--max_cached_frames");
+    if (config.max_cached_frames <= 0) {
         std::cerr << "Argument max_cached_frames must be positive." << std::endl;
         std::exit(1);
     }
 
-    auto max_cached_solutions = program.get<int>("--max_cached_solutions");
-    if (max_cached_solutions <= 0) {
+    config.max_cached_solutions = program.get<int>("--max_cached_solutions");
+    if (config.max_cached_solutions <= 0) {
         std::cerr << "Argument max_cached_solutions must be positive." << std::endl;
         std::exit(1);
     }
 
-    auto input_files = program.get<std::vector<std::string>>("input_files");
-    if (input_files.size() < 2) {
-        std::cerr << "At least two input file, one with RTM and one with image, are required, " << input_files.size() << " given." << std::endl;
+    config.input_files = program.get<std::vector<std::string>>("input_files");
+    if (config.input_files.size() < 2) {
+        std::cerr << "At least two input file, one with RTM and one with image, are required, " << config.input_files.size() << " given." << std::endl;
         std::exit(1);
     }
 
-    return program;
+    config.wavelength_threshold = program.get<double>("--wavelength_threshold");
+
+    config.output_file = program.get<std::string>("--output_file");
+    config.time_range = program.get<std::string>("--time_range");
+    config.raytransfer_name = program.get<std::string>("--raytransfer_name");
+    config.laplacian_file = program.get<std::string>("--laplacian_file");
+
+    config.logarithmic = program.get<bool>("--logarithmic");
+    config.parallel_read = program.get<bool>("--parallel_read");
+    config.use_cpu = program.get<bool>("--use_cpu");
+    config.no_guess = program.get<bool>("--no_guess");
+
+    return config;
 }
